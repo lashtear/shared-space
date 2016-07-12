@@ -113,11 +113,14 @@ showScale size bytes = findScale revScale $ fromIntegral size
     revScale :: [(Char, Integer)]
     revScale = reverse $ zip scales [scalePower^n | n <- [0::Integer ..]]
     findScale :: [(Char, Integer)] -> Integer -> String
-    findScale [] _ = "no scale err for " ++ (show size)
+    findScale _ 0 = simpleRound 0 0 ' '
     findScale ((c,s):_) n | n >= s = simpleRound n s c
     findScale (_:ss) n = findScale ss n
+    findScale _ _ = "no scale err for "++(show size)
     scales = " kMGTPEZY"
     simpleRound :: Integer -> Integer -> Char -> String
+    simpleRound 0 0 ' ' | bytes == True = "   0      Bytes"
+    simpleRound 0 0 ' '                = "   0"
     simpleRound n s c = fmt $ c:(reverse $ show $ n * 100 `div` s)
     fmt :: String -> String
     fmt (c:h:d:ds) = (replicate (4-length ds) ' ' ++ reverse ds)
