@@ -67,8 +67,8 @@ data TreeState = TreeState { tsIDRoot        :: Map FilePath Int
                              -- ^ Files with partially-discovered hardlinks
                            , tsSharedFileT   :: Total RootSet
                              -- ^ Totals for shared file data
-                           , tsUnsharedDirT  :: Total FilePath
-                             -- ^ Totals for unshared directories
+                           , tsDirT          :: Total FilePath
+                             -- ^ Totals for directories
                            , tsUnsharedFileT :: Total FilePath
                              -- ^ Totals for unshared file data
                            } deriving (Show)
@@ -155,7 +155,7 @@ printRoot (rootP, rootID) = do
   let rootMask = (bit rootID) :: Integer in liftIO $ do
     putStrLn $ "Root: " ++ (show rootP)
     putStrLn $ showTotal "unshared file" $ lookupFP $ tsUnsharedFileT ts
-    putStrLn $ showTotal "unshared  dir" $ lookupFP $ tsUnsharedDirT ts
+    putStrLn $ showTotal "          dir" $ lookupFP $ tsDirT ts
     putStrLn $ showTotal "  shared file" $ lookupRS rootMask $ tsSharedFileT ts
   where
     lookupFP m = Map.findWithDefault (0,0) rootP m
@@ -170,7 +170,7 @@ grandTotal = do
   liftIO $ do
     putStrLn "Grand total:"
     putStrLn $ showTotal "unshared file" $ gTot $ tsUnsharedFileT ts
-    putStrLn $ showTotal "unshared  dir" $ gTot $ tsUnsharedDirT ts
+    putStrLn $ showTotal "          dir" $ gTot $ tsDirT ts
     putStrLn $ showTotal "  shared file" $ gTot $ tsSharedFileT ts
   where
     gTot = (foldr addTotal (0,0)) . Map.elems
@@ -221,7 +221,7 @@ incTotal n (Just o) = Just (n `addTotal` o)
 incrementTotals :: FilePath -> FileStatus -> Analyzer ()
 incrementTotals useRoot fs = do
   when (FMM.isDirectory fs) $
-    modify $ \ s -> s { tsUnsharedDirT = updateT (tsUnsharedDirT s) }
+    modify $ \ s -> s { tsDirT = updateT (tsDirT s) }
   when (not $ FMM.isDirectory fs) $ do
     modify $ \ s -> s { tsUnsharedFileT = updateT (tsUnsharedFileT s) }
   where
